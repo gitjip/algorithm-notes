@@ -29,27 +29,3 @@ void tarjan(int u, int fa)
             fa_edge = true;
     }
 }
-int main()
-{
-    int n, m;
-    cin >> n >> m;
-    g.resize(n);
-    dfn.resize(n, -1);
-    low.resize(n, -1);
-    for (int i = 0; i < m; ++i)
-    {
-        int u, v;
-        cin >> u >> v;
-        u--;
-        v--;
-        g[u].push_back(v);
-        g[v].push_back(u);
-    }
-    for (int i = 0; i < n; ++i)
-        if (dfn[i] == -1)
-            tarjan(i, -1);
-    sort(e.begin(), e.end());
-    for (auto [u, v] : e)
-        cout << u + 1 << " " << v + 1 << "\n";
-    return 0;
-}
