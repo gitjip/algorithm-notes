@@ -1,256 +1,230 @@
-// https://www.luogu.com.cn/problem/P3369
+/**
+ * @brief AVL树
+ * 
+ * @note 节点编号从1开始
+ */
 #include <bits/stdc++.h>
 using namespace std;
-using ll = long long;
-using ull = unsigned long long;
-using pii = pair<int, int>;
-#define IOS                  \
-    ios::sync_with_stdio(0); \
-    cin.tie(0);              \
-    cout.tie(0)
-#define rep(i, j, k) for (int i = j; i <= k; ++i)
-#define rrep(i, j, k) for (int i = j; i >= k; --i)
-#define clr(a, b) memset(a, b, sizeof(a))
-const int INF = 0x3f3f3f3f;
-const int MOD = 1e9 + 7;
-const double EPS = 1e-8;
-const int N = 1e5 + 5;
-int tn;
-int root;
-int key[N];
-int hei[N];
-int ls[N];
-int rs[N];
-int cnt[N];
-int siz[N];
-void upd(int x)
+vector<int> key, cnt, ls, rs, ht, sz;
+int tot = 1;
+/**
+ * @brief 更新高度和结点数
+ */
+void upd(int u)
 {
-    siz[x] = siz[ls[x]] + siz[rs[x]] + cnt[x];
-    hei[x] = max(hei[ls[x]], hei[rs[x]]) + 1;
+    ht[u] = max(ht[ls[u]], ht[rs[u]]) + 1;
+    sz[u] = sz[ls[u]] + sz[rs[u]] + cnt[u];
 }
-int lrot(int x)
+/**
+ * @brief 左旋
+ */
+int lrot(int u)
 {
-    int r = rs[x];
-    rs[x] = ls[r];
-    ls[r] = x;
-    upd(x);
+    int r = rs[u];
+    rs[u] = ls[r];
+    ls[r] = u;
+    upd(u);
     upd(r);
     return r;
 }
-int rrot(int x)
+/**
+ * @brief 右旋
+ */
+int rrot(int u)
 {
-    int l = ls[x];
-    ls[x] = rs[l];
-    rs[l] = x;
-    upd(x);
+    int l = ls[u];
+    ls[u] = rs[l];
+    rs[l] = u;
+    upd(u);
     upd(l);
     return l;
 }
-int maintain(int x)
+/**
+ * @brief 根据平衡因子通过旋转调整树高
+ */
+int balance(int u)
 {
-    int l = ls[x];
-    int r = rs[x];
-    int lh = hei[l];
-    int rh = hei[r];
+    int lh = ht[ls[u]];
+    int rh = ht[rs[u]];
     if (lh - rh > 1)
     {
-        if (hei[ls[l]] >= hei[rs[l]])
+        if (ht[rs[ls[u]]] > ht[ls[ls[u]]])
         {
-            x = rrot(x);
+            ls[u] = lrot(ls[u]);
+            return rrot(u);
         }
-        else
-        {
-            ls[x] = lrot(l);
-            x = rrot(x);
-        }
+        return rrot(u);
     }
-    else if (rh - lh > 1)
+    if (rh - lh > 1)
     {
-        if (hei[rs[r]] >= hei[ls[r]])
+        if (ht[ls[rs[u]]] > ht[rs[rs[u]]])
         {
-            x = lrot(x);
+            rs[u] = rrot(rs[u]);
+            return lrot(u);
         }
-        else
-        {
-            rs[x] = rrot(r);
-            x = lrot(x);
-        }
+        return lrot(u);
     }
-    return x;
+    return u;
 }
-int add(int p, int x)
+/**
+ * @brief 插入新节点
+ * 
+ * @param u 起始根节点
+ * @param x 节点的键
+ */
+int insert(int u, int x)
 {
-    if (!p)
+    if (u == 0)
     {
-        p = ++tn;
-        key[tn] = x;
-        cnt[tn] = 1;
+        u = tot++;
+        key[u] = x;
+        cnt[u] = 1;
     }
-    else if (key[p] == x)
+    else if (key[u] == x)
     {
-        ++cnt[p];
+        cnt[u]++;
     }
-    else if (key[p] < x)
-    {
-        rs[p] = add(rs[p], x);
-    }
-    else
-    {
-        ls[p] = add(ls[p], x);
-    }
-    upd(p);
-    return maintain(p);
+    else if (key[u] < x)
+        rs[u] = insert(rs[u], x);
+    else if (key[u] > x)
+        ls[u] = insert(ls[u], x);
+    upd(u);
+    return balance(u);
 }
-int del_mostlst(int p, int x)
+/**
+ * @brief 摘取最右端的节点, 服务于remove函数
+ * 
+ * @param u 起始根节点
+ */
+pair<int, int> pick_mostright(int u)
 {
-    if (p == x)
-    {
-        return rs[p];
-    }
-    else
-    {
-        ls[p] = del_mostlst(ls[p], x);
-    }
-    upd(p);
-    return maintain(p);
+    if (rs[u] == 0)
+        return {ls[u], u};
+    auto [r, v] = pick_mostright(rs[u]);
+    rs[u] = r;
+    upd(u);
+    return {balance(u), v};
 }
-int del(int p, int x)
+/**
+ * @brief 删除节点
+ * 
+ * @param x 待删节点的键
+ */
+int remove(int u, int x)
 {
-    if (!p)
-    {
+    if (u == 0)
         return 0;
-    }
-    else if (key[p] == x)
+    if (key[u] != x)
     {
-        if (cnt[p] > 1)
-        {
-            --cnt[p];
-        }
-        else
-        {
-            if (!ls[p] && !rs[p])
-            {
-                return 0;
-            }
-            else if (!ls[p] && rs[p])
-            {
-                p = rs[p];
-            }
-            else if (ls[p] && !rs[p])
-            {
-                p = ls[p];
-            }
-            else
-            {
-                int rl = rs[p];
-                while (ls[rl])
-                    rl = ls[rl];
-                rs[rl] = del_mostlst(rs[p], rl);
-                ls[rl] = ls[p];
-                p = rl;
-            }
-        }
+        if (key[u] < x)
+            rs[u] = remove(rs[u], x);
+        else if (key[u] > x)
+            ls[u] = remove(ls[u], x);
+        upd(u);
+        return balance(u);
     }
-    else if (key[p] < x)
+    if (cnt[u] > 1)
     {
-        rs[p] = del(rs[p], x);
+        cnt[u]--;
+        upd(u);
+        return u;
     }
-    else
-    {
-        ls[p] = del(ls[p], x);
-    }
-    upd(p);
-    return maintain(p);
+    if (ls[u] == 0 && rs[u] == 0)
+        return 0;
+    if (ls[u] == 0)
+        return rs[u];
+    if (rs[u] == 0)
+        return ls[u];
+    auto [v, w] = pick_mostright(ls[u]);
+    ls[w] = v;
+    rs[w] = rs[u];
+    upd(w);
+    return balance(w);
 }
-int get_rank(int p, int x)
+/**
+ * @brief 获取节点排名(从0开始)
+ * 
+ * @param x 节点的键
+ */
+int get_rank(int u, int x)
 {
-    if (!p)
-        return 1;
-    else if (key[p] >= x)
-        return get_rank(ls[p], x);
-    else
-        return siz[ls[p]] + cnt[p] + get_rank(rs[p], x);
+    if (u == 0)
+        return 0;
+    if (key[u] < x)
+        return sz[ls[u]] + cnt[u] + get_rank(rs[u], x);
+    return get_rank(ls[u], x);
 }
-int get_key(int p, int x)
+/**
+ * @brief 获取指定排名的节点键
+ * 
+ * @param rk 节点排名
+ */
+int get_key(int u, int rk)
 {
-    if (siz[ls[p]] >= x)
-        return get_key(ls[p], x);
-    else if (siz[ls[p]] + cnt[p] < x)
-        return get_key(rs[p], x - siz[ls[p]] - cnt[p]);
-    else
-        return key[p];
+    if (sz[ls[u]] + cnt[u] <= rk)
+        return get_key(rs[u], rk - sz[ls[u]] - cnt[u]);
+    if (sz[ls[u]] > rk)
+        return get_key(ls[u], rk);
+    return key[u];
 }
-int get_pre(int p, int x)
+/**
+ * @brief 获取节点前驱
+ * 
+ * @param x 节点的键
+ */
+int get_pre(int u, int x)
 {
-    if (!p)
-        return INT_MIN;
-    else if (key[p] >= x)
-        return get_pre(ls[p], x);
-    else
-        return max(key[p], get_pre(rs[p], x));
+    if (u == 0)
+        return -1e9;
+    if (key[u] < x)
+        return max(get_pre(rs[u], x), key[u]);
+    return get_pre(ls[u], x);
 }
-int get_post(int p, int x)
+/**
+ * @brief 获取节点后继
+ * 
+ * @param x 节点的键
+ */
+int get_post(int u, int x)
 {
-    if (!p)
-        return INT_MAX;
-    else if (key[p] <= x)
-        return get_post(rs[p], x);
-    else
-        return min(key[p], get_post(ls[p], x));
+    if (u == 0)
+        return 1e9;
+    if (key[u] > x)
+        return min(get_post(ls[u], x), key[u]);
+    return get_post(rs[u], x);
 }
-inline void solve()
-{
-    tn = 0;
-    root = 0;
-    clr(key, 0);
-    clr(hei, 0);
-    clr(ls, 0);
-    clr(rs, 0);
-    clr(cnt, 0);
-    clr(siz, 0);
-    int m;
-    scanf("%d", &m);
-    int op, x;
-    while (m--)
-    {
-        scanf("%d%d", &op, &x);
-        if (op == 1)
-        {
-            root = add(root, x);
-        }
-        else if (op == 2)
-        {
-            root = del(root, x);
-        }
-        else if (op == 3)
-        {
-            printf("%d\n", get_rank(root, x));
-        }
-        else if (op == 4)
-        {
-            printf("%d\n", get_key(root, x));
-        }
-        else if (op == 5)
-        {
-            printf("%d\n", get_pre(root, x));
-        }
-        else
-        {
-            printf("%d\n", get_post(root, x));
-        }
-    }
-}
-inline void init()
-{
-}
+/**
+ * @brief 使用示例
+ * 
+ * @note 测试链接: https://www.luogu.com.cn/problem/P3369
+ */
 int main()
 {
-    IOS;
-    init();
-    int t = 1;
-    while (t--)
+    int n;
+    cin >> n;
+    key.resize(n + 1);
+    cnt.resize(n + 1);
+    ls.resize(n + 1);
+    rs.resize(n + 1);
+    ht.resize(n + 1);
+    sz.resize(n + 1);
+    int root = 0;
+    for (int i = 0; i < n; i++)
     {
-        solve();
+        int op, x;
+        cin >> op >> x;
+        if (op == 1)
+            root = insert(root, x);
+        else if (op == 2)
+            root = remove(root, x);
+        else if (op == 3)
+            cout << get_rank(root, x) + 1 << "\n";
+        else if (op == 4)
+            cout << get_key(root, x - 1) << "\n";
+        else if (op == 5)
+            cout << get_pre(root, x) << "\n";
+        else
+            cout << get_post(root, x) << "\n";
     }
     return 0;
 }
