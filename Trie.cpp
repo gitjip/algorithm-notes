@@ -1,81 +1,66 @@
-// https://www.luogu.com.cn/problem/P8306
 #include <bits/stdc++.h>
 using namespace std;
-using ll = long long;
-using pii = pair<int, int>;
-#define rep(i, j, k) for (int i = (j); i <= (k); ++i)
-#define rrep(i, j, k) for (int i = (j); i >= (k); --i)
-const int INF = 0x3f3f3f3f;
-const int MOD = 1e9 + 7;
-const int N = 3e6 + 5;
-int tot;
-int nex[N][63];
-int cnt[N], chi[128];
-void insert(const string &s)
+vector<vector<int>> trie;
+vector<int> cnt;
+/**
+ * @brief 建Trie树, 插入串
+ */
+void insert(string s)
 {
-    int p = 1;
-    cnt[p]++;
+    int u = 0;
     for (char c : s)
     {
-        if (!nex[p][chi[c]])
+        cnt[u]++;
+        if (trie[u][c] == 0)
         {
-            nex[p][chi[c]] = ++tot;
-            memset(nex[tot], 0, sizeof(nex[tot]));
-            cnt[tot] = 0;
+            trie[u][c] = trie.size();
+            trie.push_back(vector<int>(128));
+            cnt.push_back(0);
         }
-        p = nex[p][chi[c]];
-        cnt[p]++;
+        u = trie[u][c];
     }
+    cnt[u]++;
 }
-int query(const string &s)
+/**
+ * @brief 查询以s为前缀的串的个数
+ */
+int query(string s)
 {
-    int p = 1;
+    int u = 0;
     for (char c : s)
     {
-        if (!nex[p][chi[c]])
-        {
+        if (trie[u][c] == 0)
             return 0;
-        }
-        p = nex[p][chi[c]];
+        u = trie[u][c];
     }
-    return cnt[p];
+    return cnt[u];
 }
 void solve()
 {
-    tot = 1;
-    memset(nex[1], 0, sizeof(nex[1]));
-    cnt[1] = 0;
+    trie.clear();
+    cnt.clear();
+    trie.resize(1, vector<int>(128));
+    cnt.resize(1);
     int n, q;
     cin >> n >> q;
-    string s;
-    rep(i, 1, n)
+    for (int i = 0; i < n; i++)
     {
+        string s;
         cin >> s;
         insert(s);
     }
-    rep(i, 1, q)
+    for (int i = 0; i < q; i++)
     {
+        string s;
         cin >> s;
         cout << query(s) << "\n";
     }
 }
-void init()
-{
-    rep(i, 1, 26) chi[i - 1 + 'a'] = i;
-    rep(i, 27, 52) chi[i - 27 + 'A'] = i;
-    rep(i, 53, 62) chi[i - 53 + '0'] = i;
-}
 int main()
 {
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    cout.tie(0);
-    init();
-    int t = 1;
+    int t;
     cin >> t;
     while (t--)
-    {
         solve();
-    }
     return 0;
 }
