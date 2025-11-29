@@ -1,83 +1,73 @@
-// https://www.luogu.com.cn/problem/P3379
 #include <bits/stdc++.h>
 using namespace std;
-using ll = long long;
-using pii = pair<int, int>;
-#define rep(i, j, k) for (int i = (j); i <= (k); ++i)
-#define rrep(i, j, k) for (int i = (j); i >= (k); --i)
-const int INF = 0x3f3f3f3f;
-const int MOD = 1e9 + 7;
+vector<int> pre;
 vector<vector<int>> g;
 vector<vector<pair<int, int>>> query;
-vector<int> vis, ans, pre;
-int fin(int u)
+vector<bool> vis;
+vector<int> ans;
+void dsu_init(int n)
 {
-    return pre[u] = pre[u] == u ? u : fin(pre[u]);
+    pre.resize(n);
+    for (int i = 0; i < n; i++)
+        pre[i] = i;
 }
-void uni(int u, int v)
+int dsu_find(int u)
 {
-    u = fin(u);
-    v = fin(v);
-    pre[u] = v;
+    return pre[u] = pre[u] == u ? u : dsu_find(pre[u]);
 }
+/**
+ * @brief Tarjan求LCA
+ * @param u 子树根节点
+ */
 void tarjan(int u)
 {
-    vis[u] = 1;
-    for (auto v : g[u])
-    {
+    vis[u] = true;
+    for (int v : g[u])
         if (!vis[v])
         {
+            // 先求子树再连边, 隔离环境求最近
             tarjan(v);
             pre[v] = u;
         }
-    }
+    // 离线查询
     for (auto [v, i] : query[u])
-    {
         if (vis[v])
-        {
-            ans[i] = fin(v);
-        }
-    }
+            // 已经访问过的在同一个子树, 可图解
+            ans[i] = dsu_find(v);
 }
-void solve()
+/**
+ * @brief 测试链接: https://www.luogu.com.cn/problem/P3379
+ */
+int main()
 {
     int n, m, s;
     cin >> n >> m >> s;
-    g.resize(n + 1);
-    query.resize(n + 1);
-    vis.resize(n + 1);
-    pre.resize(n + 1);
-    ans.resize(n + 1);
-    for (int i = 1; i <= n; ++i)
-        pre[i] = i;
-    for (int i = 1; i < n; ++i)
+    s--;
+    dsu_init(n);
+    g.resize(n);
+    query.resize(m);
+    vis.resize(n);
+    ans.resize(m);
+    for (int i = 0; i < n - 1; i++)
     {
         int u, v;
         cin >> u >> v;
+        u--;
+        v--;
         g[u].push_back(v);
         g[v].push_back(u);
     }
-    for (int i = 1; i <= m; ++i)
+    for (int i = 0; i < m; i++)
     {
         int u, v;
         cin >> u >> v;
+        u--;
+        v--;
         query[u].push_back({v, i});
         query[v].push_back({u, i});
     }
     tarjan(s);
-    for (int i = 1; i <= m; ++i)
-        cout << ans[i] << "\n";
-}
-int main()
-{
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    cout.tie(0);
-    int t = 1;
-    // cin >> t;
-    while (t--)
-    {
-        solve();
-    }
+    for (int i = 0; i < m; i++)
+        cout << ans[i] + 1 << "\n";
     return 0;
 }
