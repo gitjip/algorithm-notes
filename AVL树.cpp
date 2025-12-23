@@ -1,7 +1,6 @@
 /**
- * @brief AVL树
- * 
- * @note 节点编号从1开始
+ * AVL树
+ * 节点编号从1开始
  */
 #include <bits/stdc++.h>
 using namespace std;
@@ -194,9 +193,7 @@ int get_post(int u, int x)
     return get_post(rs[u], x);
 }
 /**
- * @brief 使用示例
- * 
- * @note 测试链接: https://www.luogu.com.cn/problem/P3369
+ * @brief 测试链接: https://www.luogu.com.cn/problem/P3369
  */
 int main()
 {
