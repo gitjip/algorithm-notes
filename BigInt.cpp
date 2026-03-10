@@ -134,13 +134,13 @@ struct BigInt {
     BigInt operator*(const BigInt& b) const
     {
         BigInt res;
-        res.num.resize(num.size() + b.num.size(), 0);
-        for (int i = 0; i < num.size(); i++) {
+        res.num.assign(num.size() + b.num.size(), 0);
+        for (size_t i = 0; i < num.size(); ++i) {
             ll carry = 0;
-            for (int j = 0; j < b.num.size() || carry; j++) {
-                ll x = res.num[i + j] + num[i] * (j < b.num.size() ? b.num[j] : 0) + carry;
-                res.num[i + j] = x % BASE;
-                carry = x / BASE;
+            for (size_t j = 0; j < b.num.size() || carry; ++j) {
+                ll cur = res.num[i + j] + num[i] * (j < b.num.size() ? b.num[j] : 0) + carry;
+                res.num[i + j] = cur % BASE;
+                carry = cur / BASE;
             }
         }
         res.neg = neg ^ b.neg;
@@ -149,30 +149,34 @@ struct BigInt {
     }
     friend pair<BigInt, BigInt> div_mod_abs(const BigInt& a, const BigInt& b)
     {
-        BigInt quot, rem = a.abs();
-        quot.num.resize(a.num.size(), 0);
-        BigInt one = BigInt(1);
-        BigInt bb = b.abs();
-        for (int i = a.num.size() - 1; i >= 0; i--) {
-            rem = rem * BASE;
-            if (i < rem.num.size())
-                rem.num[i] = a.num[i];
-            rem.trim();
+        // 竖式除法实现
+        if (b == BigInt(0)) throw runtime_error("division by zero");
+        BigInt dividend = a.abs();
+        BigInt divisor = b.abs();
+        BigInt quotient, remainder;
+        quotient.num.resize(dividend.num.size(), 0);
+        remainder.num.clear();
+        for (int i = (int)dividend.num.size() - 1; i >= 0; --i) {
+            // remainder = remainder * BASE + dividend.num[i]
+            remainder.num.insert(remainder.num.begin(), dividend.num[i]);
+            remainder.trim();
             ll l = 0, r = BASE - 1, ans = 0;
             while (l <= r) {
                 ll mid = (l + r) / 2;
-                if (bb * BigInt(mid) <= rem) {
+                BigInt t = divisor * BigInt(mid);
+                if (t <= remainder) {
                     ans = mid;
                     l = mid + 1;
-                } else
+                } else {
                     r = mid - 1;
+                }
             }
-            quot.num[i] = ans;
-            rem = rem - bb * BigInt(ans);
+            quotient.num[i] = ans;
+            remainder = remainder - divisor * BigInt(ans);
         }
-        quot.trim();
-        rem.trim();
-        return { quot, rem };
+        quotient.trim();
+        remainder.trim();
+        return {quotient, remainder};
     }
     BigInt operator/(const BigInt& b) const
     {
@@ -225,7 +229,7 @@ struct BigInt {
         return out;
     }
 };
-// 测试样例（竞赛中可注释/删除）
+// 测试样例
 int main()
 {
     BigInt a, b;
