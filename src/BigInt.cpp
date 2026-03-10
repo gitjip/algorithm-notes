@@ -236,7 +236,3 @@ struct BigInt {
         return out;
     }
 };
-BigInt gcd(BigInt a, BigInt b)
-{
-    return b == 0 ? a : gcd(b, a % b);
-}
