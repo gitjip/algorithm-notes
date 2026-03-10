@@ -199,6 +199,11 @@ struct BigInt {
         rem.neg = neg;
         return rem;
     }
+    BigInt& operator+=(const BigInt& b) { return *this = *this + b; }
+    BigInt& operator-=(const BigInt& b) { return *this = *this - b; }
+    BigInt& operator*=(const BigInt& b) { return *this = *this * b; }
+    BigInt& operator/=(const BigInt& b) { return *this = *this / b; }
+    BigInt& operator%=(const BigInt& b) { return *this = *this % b; }
     string to_string() const
     {
         string res;
