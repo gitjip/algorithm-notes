@@ -28,8 +28,9 @@ struct BigInt {
         for (int i = s.size(); i > start; i -= WIDTH) {
             int l = max(start, i - WIDTH);
             ll val = 0;
-            for (int j = l; j < i; j++)
+            for (int j = l; j < i; j++) {
                 val = val * 10 + s[j] - '0';
+            }
             num.push_back(val);
         }
         if (num.empty()) {
@@ -150,9 +151,9 @@ struct BigInt {
     }
     friend pair<BigInt, BigInt> div_mod_abs(const BigInt& a, const BigInt& b)
     {
-        // 竖式除法实现
-        if (b == BigInt(0))
+        if (b == BigInt(0)) {
             throw runtime_error("division by zero");
+        }
         BigInt dividend = a.abs();
         BigInt divisor = b.abs();
         BigInt quotient, remainder;
@@ -182,16 +183,18 @@ struct BigInt {
     }
     BigInt operator/(const BigInt& b) const
     {
-        if (b.abs() == BigInt(0))
+        if (b.abs() == BigInt(0)) {
             throw runtime_error("division by zero");
+        }
         auto [quot, rem] = div_mod_abs(*this, b);
         quot.neg = neg ^ b.neg;
         return quot;
     }
     BigInt operator%(const BigInt& b) const
     {
-        if (b.abs() == BigInt(0))
+        if (b.abs() == BigInt(0)) {
             throw runtime_error("mod by zero");
+        }
         auto [quot, rem] = div_mod_abs(*this, b);
         rem.neg = neg;
         return rem;
