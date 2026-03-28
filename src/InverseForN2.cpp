@@ -1,4 +1,4 @@
-// 求一个整数的乘法逆元
+// 求前n项乘法逆元，间接阶乘法
 // https://www.luogu.com.cn/problem/P3811
 #include <bits/stdc++.h>
 using namespace std;
@@ -15,11 +15,19 @@ ll qp(ll a, ll b, ll p) {
 int main() {
   ios::sync_with_stdio(false);
   cin.tie(nullptr);
-  ll n, p;
+  int n, p;
   cin >> n >> p;
-  // 时间复杂度O(nlogp)，太慢
+  vector<ll> fac(n + 1), invfac(n + 1);
+  fac[0] = 1;
   for (ll i = 1; i <= n; ++i) {
-    cout << qp(i, p - 2, p) << "\n";  // 求i的逆元
+    fac[i] = fac[i - 1] * i % p;
+  }
+  invfac[n] = qp(fac[n], p - 2, p);
+  for (ll i = n - 1; i >= 1; --i) {
+    invfac[i] = invfac[i + 1] * (i + 1) % p;
+  }
+  for (ll i = 1; i <= n; ++i) {
+    cout << invfac[i] * fac[i - 1] % p << "\n";
   }
   return 0;
 }
